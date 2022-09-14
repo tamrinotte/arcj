@@ -10,7 +10,7 @@ Arcane juice is a command line tool to automatically manipulate your mac address
 4) ```sudo chown $USER:$USER /usr/bin/arcj && sudo chmod u+x /usr/bin/arcj```
 
 ## OPTIONS 
--c, --connection 
+	-c, --connection 
 		Use this option to connect back to the internet automatically.
 
 ## EXAMPLES
