@@ -1,0 +1,89 @@
+#!/usr/bin/python3
+
+# LIBRARIES
+from os import popen, system
+from sys import argv
+from time import sleep
+from random import choices
+
+# VARIABLES
+helpOpts = ["--help", "-help", "-h", "-?"]
+connectionOpts = ["-c", "--connection"]
+cC = None
+nIRP = []
+helpTxt = f'\033[1m' + "NAME" + '\033[0m' + "\n\t" + 'arcj - A command line tool to change the mac address of the wifi adoptor automatically.\n\n' + '\033[1m' + 'USAGE' + '\033[0m'+ "\n\t" + 'arcj [OPTION]' + "\n\n" + '\033[1m' + 'DESCRIPTION' + '\033[0m' +"\n\t" + "Change your computer's mac address and decide if you want connect back to the internet automatically.\n\n" + '\033[1m' + 'OPTIONS' + '\033[0m' + "\n\t" + f'{connectionOpts[0]}, {connectionOpts[1]} \n\t\tUse this option to connect back to the internet automatically.' + "\n\n" + '\033[1m' + 'EXAMPLES' + '\033[0m' + "\n\t" + f'arcj {connectionOpts[0]}\n\n'
+
+# FUNCTIONS
+def rPIC():
+    """A function that checks if required packages are installed."""
+
+    lORP = ['net-tools']
+    rPIS = 0
+
+    for p in lORP:
+        iC = popen(f'apt-cache policy {p}').read()
+        if '(none)' in iC and "***" not in iC:
+            installPermission = str(input(f'arcj command line tool need {p} package to work properly. Do you give your permission to it\'s installation? (y/n): ')).lower().strip()
+            if installPermission == "y" or installPermission == "yes":
+                system(f'apt install {p} -y')
+
+        iC = popen(f'apt-cache policy {p}').read()
+        if "***" in iC and "(none)" not in iC:
+            rPIS += 1
+
+    for p in lORP:
+        iC = popen(f'apt-cache policy {p}').read()
+
+        if '(none)' not in iC and "***" in iC:
+            nIRP.append(p)
+
+    return rPIS
+
+def changeTheMacAddr(cC):
+    """A function that changes the computer's mac address."""
+
+    wifiAdaptorN = popen(f'iw dev').read()
+
+    try:
+        with open('/tmp/hwfile.txt', 'w') as hwFile:
+            hwFile.write(wifiAdaptorN)
+    except:
+        print("The file is already exist.")
+
+    hwFile = open("/tmp/hwfile.txt", "r")
+    lines = hwFile.readlines()
+    hwFile.close()
+    wifiAdaptorN = None
+
+    for line in lines:
+        if "Interface" in line:
+            tIndex = line.find("Interface")+len("Interface")+1
+            wifiAdaptorN = line[tIndex:]
+
+    print(f'Wifi Adaptor Name = {wifiAdaptorN}')
+    nums = [0,1,2,3,4,5,6,7,8,9,"a","b","c","d","e"]
+
+    system(f'ifconfig {wifiAdaptorN} down')
+    system(f'systemctl stop NetworkManager.service ; systemctl stop networking.service')
+    system(f'ifconfig wlp3s0 hw ether 00:{choices(nums, k=1)[0]}{choices(nums, k=1)[0]}:{choices(nums, k=1)[0]}{choices(nums, k=1)[0]}:{choices(nums, k=1)[0]}{choices(nums, k=1)[0]}:{choices(nums, k=1)[0]}{choices(nums, k=1)[0]}:{choices(nums, k=1)[0]}{choices(nums, k=1)[0]}')
+    system(f'systemctl start NetworkManager.service')
+    system(f'ifconfig {wifiAdaptorN} up')
+
+    if cC == True:
+        sleep(4) # Some times it takes time
+        system(f'nmcli d connect {wifiAdaptorN} private yes')
+
+
+if rPIC() == 1:
+    if argv[1] in helpOpts:
+        print(helpTxt)
+
+    else:
+        if connectionOpts[0] in argv or connectionOpts[1] in argv:
+            cC = True
+            changeTheMacAddr(cC)
+        else:
+            changeTheMacAddr(cC)
+
+else:
+    print(f'These packages {nIRP} are not available on your system. You need to make sure all the required packages are available on your system.')
