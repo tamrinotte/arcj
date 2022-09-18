@@ -4,7 +4,6 @@
 from os import popen, system
 from sys import argv
 from time import sleep
-from random import choices
 
 # VARIABLES
 helpOpts = ["--help", "-help", "-h", "-?"]
@@ -17,7 +16,7 @@ helpTxt = f'\033[1m' + "NAME" + '\033[0m' + "\n\t" + 'arcj - A command line tool
 def rPIC():
     """A function that checks if required packages are installed."""
 
-    lORP = ['net-tools']
+    lORP = ['net-tools', 'macchanger']
     rPIS = 0
 
     for p in lORP:
@@ -61,11 +60,10 @@ def changeTheMacAddr(cC):
             wifiAdaptorN = line[tIndex:]
 
     print(f'Wifi Adaptor Name = {wifiAdaptorN}')
-    nums = [0,1,2,3,4,5,6,7,8,9,"a","b","c","d","e"]
 
     system(f'ifconfig {wifiAdaptorN} down')
     system(f'systemctl stop NetworkManager.service ; systemctl stop networking.service')
-    system(f'ifconfig wlp3s0 hw ether 00:{choices(nums, k=1)[0]}{choices(nums, k=1)[0]}:{choices(nums, k=1)[0]}{choices(nums, k=1)[0]}:{choices(nums, k=1)[0]}{choices(nums, k=1)[0]}:{choices(nums, k=1)[0]}{choices(nums, k=1)[0]}:{choices(nums, k=1)[0]}{choices(nums, k=1)[0]}')
+    system(f'macchanger -rp {wifiAdaptorN}')
     system(f'systemctl start NetworkManager.service')
     system(f'ifconfig {wifiAdaptorN} up')
 
@@ -74,7 +72,7 @@ def changeTheMacAddr(cC):
         system(f'nmcli d connect {wifiAdaptorN} private yes')
 
 
-if rPIC() == 1:
+if rPIC() == 2:
     if argv[1] in helpOpts:
         print(helpTxt)
 
